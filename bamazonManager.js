@@ -26,6 +26,7 @@ connection.connect(function (err) {
     if (err) throw err;
     console.log("connected as id " + connection.threadId);
     //AFTER THE CONNECTION IS ESTABLISHED YOU SHOW ALL THE ITEMS IN THE DATABASE
+    start();
 
 });
 
@@ -53,6 +54,7 @@ function start() {
   
         case "View Low Inventory":
         //Show all inventory that is under 10
+        lowQty();
           break;
   
         case "Add to Inventory":
@@ -81,7 +83,29 @@ var showItems = function () {
             Price: $${res[i].price}
             Quantity: ${res[i].stock_quantity}
             `)
-        }     
+        }
+        connection.end();
+    });
+}
+
+//FUNCTION TO SHOW ALL ITEMS THAT HAVE LOW QTY
+
+var lowQty = function () {
+    connection.query("SELECT * FROM products WHERE stock_quantity < 10", function (err, res) {
+        if (err) throw err;
+        //console.log(res);
+        console.log(`Low Quantity \n ---------------------------------`)
+        //CREATE A FOR LOOP TO SHOW ALL THE ITEMS AVAILABLE
+        for (var i = 0; i < res.length; i++) {
+            console.log(`
+            ID: ${res[i].id}
+            Product Name: ${res[i].product_name}
+            Department: ${res[i].department_name}
+            Price: $${res[i].price}
+            Quantity: ${res[i].stock_quantity}
+            `)
+        }
+        connection.end();
     });
 }
 
