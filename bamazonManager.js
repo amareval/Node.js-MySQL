@@ -49,7 +49,7 @@ function start() {
         switch (answer.action) {
         case "View Products for Sale":
         //Show item function
-          showItems();
+        showItems();
           break;
   
         case "View Low Inventory":
@@ -58,7 +58,8 @@ function start() {
           break;
   
         case "Add to Inventory":
-        //Run function that will update quantities in the table
+        //Run function that will add the item to the table
+        addItem();
           break;
   
         case "Add New Product":
@@ -88,13 +89,12 @@ var showItems = function () {
     });
 }
 
-//FUNCTION TO SHOW ALL ITEMS THAT HAVE LOW QTY
-
+//SHOW THE ITEMS IN THE DATABASE with QTY LOWER THAN 10
 var lowQty = function () {
     connection.query("SELECT * FROM products WHERE stock_quantity < 10", function (err, res) {
         if (err) throw err;
         //console.log(res);
-        console.log(`Low Quantity \n ---------------------------------`)
+        console.log(`LOW QUANTITY ITEMS \n ---------------------------------`)
         //CREATE A FOR LOOP TO SHOW ALL THE ITEMS AVAILABLE
         for (var i = 0; i < res.length; i++) {
             console.log(`
@@ -109,70 +109,69 @@ var lowQty = function () {
     });
 }
 
-//FUNCTION TO ASK A QUESTION TO THE CLIENT
 
-var desiresDreams = function () {
+//FUNCTION TO ADD ITEMS TO THE TABLE
 
-    // query the database for all items being auctioned
-    connection.query("SELECT * FROM products", function (err, results) {
+var addItem = function () {
+    connection.query("SELECT * FROM products", function (err, res) {
         if (err) throw err;
-        // once you have the items, prompt the user for which they'd like to bid on
         inquirer
-            .prompt([
-                {
-                    name: "choice",
-                    type: "list",
-                    choices: function () {
-                        var choiceArray = [];
-                        for (var i = 0; i < results.length; i++) {
-                            choiceArray.push(results[i].product_name);
-                        }
-                        return choiceArray;
+        .prompt([
+            {
+                name: "product",
+                type: "input",
+                message: "What item do you want to add?",
+                
+            },
+            {
+                name: "department",
+                type: "input",
+                message: "What department is it in?",
+                
+            },
+            {
+                name: "price",
+                type: "input",
+                message: "What is the price",
+                
+            },
+            {
+                name: "quantity",
+                type: "input",
+                message: "Initial quantity?",
+                
+            }
+        ])
+        .then(function(answer){
+            var newitem = answer.product;
+            var department = answer.department;
+            var price = parseInt(answer.price);
+            var qty = parseInt(answer.quantity);
+
+            connection.query("INSERT INTO products('product_name', 'department_name', 'price', 'stock_quantity') VALUES ?", function (err, res){
+                [
+                    {
+                        product_name: newitem
                     },
-                    message: "What item would you like to buy?"
-                },
-                {
-                    name: "bid",
-                    type: "input",
-                    message: "How many do you want to buy?"
-                }
-            ])
-            .then(function (answer) {
-                // get the information of the chosen item
-                for (var i = 0; i < results.length; i++) {
-                    if (results[i].product_name === answer.choice) {
-                        chosenItem = results[i];
+                    {
+                        department_name: department
+                    },
+                    {
+                        price: price
+                    },
+                    {
+                        stock_quantity: qty
                     }
-                }
-                // console.log(chosenItem.product_name);
-                // console.log(chosenItem.stock_quantity);
-                // console.log(chosenItem.id);
-                    // determine if bid was high enough
-                    if (parseInt(chosenItem.stock_quantity) > answer.bid) {
-                        //New quantity amount so it can be displayed
-                         newqty = (parseInt(chosenItem.stock_quantity) - answer.bid);
-                        // bid was high enough, so update db, let the user know, and start over
-                        connection.query(
-                            "UPDATE products SET ? WHERE ?",
-                            [
-                                {
-                                    stock_quantity: (parseInt(chosenItem.stock_quantity) - answer.bid)
-                                },
-                                {
-                                    id: chosenItem.id
-                                }
-                            ],
-                        );
-                        //Show the updated amounts
-                        updatedAmounts();
-                    }
-                    else {
-                        // bid wasn't high enough, so apologize and start over
-                        console.log("Not enough available quantity");
-                    }
-                });
+                ],
+                showItems();
+            });
+
+        });
     });
 }
+
+
+
 //FUNCTION TO SHOW THE UPDATED AMOUNTS
 
 var updatedAmounts = function(){
