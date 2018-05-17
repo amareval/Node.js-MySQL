@@ -147,22 +147,13 @@ var addItem = function () {
             var department = answer.department;
             var price = parseInt(answer.price);
             var qty = parseInt(answer.quantity);
-
-            connection.query("INSERT INTO products('product_name', 'department_name', 'price', 'stock_quantity') VALUES ?", function (err, res){
-                [
-                    {
-                        product_name: newitem
-                    },
-                    {
-                        department_name: department
-                    },
-                    {
-                        price: price
-                    },
-                    {
-                        stock_quantity: qty
-                    }
-                ],
+            console.log(newitem)
+            console.log(department)
+            console.log(price)
+            console.log(qty)
+            connection.query("INSERT INTO products (product_name, department_name, price, stock_quantity) VALUES (?, ?, ?, ?)",
+            [newitem, department, price, qty], 
+            function (err, res){
                 showItems();
             });
 
