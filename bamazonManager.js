@@ -7,6 +7,8 @@ var inquirer = require("inquirer");
 
 var chosenItem;
 
+var chosenId;
+
 
 //CONNECT
 
@@ -59,11 +61,13 @@ function start() {
   
         case "Add to Inventory":
         //Run function that will add the item to the table
-        addItem();
+        addqty();
           break;
+          
   
         case "Add New Product":
         //Run function that allows you to input new products
+        addItem();
           break;
         }
       });
@@ -161,7 +165,71 @@ var addItem = function () {
     });
 }
 
+//FUNCTION TO UPDATE QUANTITY
 
+var addqty = function(){
+    console.log("Selecting all items to add qty to \n");
+    connection.query("SELECT * FROM products", function (err, results) {
+        if (err) throw err;
+        // Create a "Prompt" with a series of questions.
+        inquirer
+            .prompt([
+                //CREATING AN INQUIRER POPULATED BY THE SQL LIST
+                {
+                    type: "list",
+                    name: "items",
+                    choices: function () {
+                        //ARRAY TO POPULATE THE SQL LIST
+                        var choices = [];
+                        for (var i = 0; i < results.length; i++) {
+                            choices.push(results[i].product_name);
+                        };
+                        return choices;
+                    },
+                    message: "What item do you want to add quantity to?"
+                },
+                {
+                    type: "input",
+                    name: "qty",
+                    message: "How much qty are we adding?"
+                    
+                }
+            ])
+            .then(function (inquirerResponse) {
+                //FIND THE CHOSEN ITEM AND PULL THE DETAILS
+                // console.log(results);
+                for (var i = 0; i < results.length; i++) {
+                    if (results[i].product_name == inquirerResponse.items){
+                        // console.log(results[i].product_name);
+                        chosenQty = results[i].stock_quantity;
+                        chosenItem = results[i].product_name;
+                        chosenId = results[i].id;
+                        // console.log(chosenId);
+                    }
+                        // console.log(chosenId);
+                };
+        //Update the item
+                    // console.log(chosenItem);
+                    console.log(chosenId)
+                    console.log("Qty Added!")
+                    connection.query(
+                    "UPDATE products SET ? WHERE ?",
+                    [
+                        {
+                            stock_quantity: (parseInt(inquirerResponse.qty) + chosenQty)
+                        },
+                        {
+                            id: chosenId
+                        }
+                    ],
+                function (err, res) {
+                    console.log(res.affectedRows + " item qty updated!\n");
+                    connection.end();
+                });
+
+            })
+    });
+}
 
 //FUNCTION TO SHOW THE UPDATED AMOUNTS
 
